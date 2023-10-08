@@ -1,0 +1,30 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  FTP_HOST: "serwer210611.lh.pl"
+  FTP_USER: "serwer210611"
+  FTP_PASSWORD: "AY6Mk#3m"
+  FTP_REMOTE_DIR: "/public_html/sadmin.pl"
+
+before_script:
+  - apt-get update -qy
+  - apt-get install -y lftp
+  - curl -sL https://deb.nodesource.com/setup_18.x | bash -  # Dodaj repozytorium Node.js 18.x
+  - apt-get install -y nodejs  # Instaluj Node.js 18.x
+
+build:
+  stage: build
+  script:
+    - npm install -g gatsby-cli  # Instaluj Gatsby CLI globalnie
+    - npm install  # Instaluj lokalne zależności projektu
+    - gatsby build  # Buduj projekt Gatsby
+
+deploy:
+  stage: deploy
+  script:
+  - lftp -c "set ftp:ssl-allow no; open -u $FTP_USER,$FTP_PASSWORD $FTP_HOST; mirror --reverse --delete --verbose /public_html/sadmin.pl $FTP_REMOTE_DIR"
+
+  only:
+    - master  # Możesz dostosować to, aby tylko główna gałąź wyzwalająca wdrażanie
